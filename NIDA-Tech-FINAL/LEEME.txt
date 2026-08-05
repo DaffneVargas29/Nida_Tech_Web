@@ -1,0 +1,11 @@
+NIDA TECH FINAL
+
+1. Descomprime la carpeta.
+2. Abre index.html.
+3. No muevas index.html fuera de la carpeta.
+4. Mantén juntas las carpetas css, js y assets.
+
+Antes de publicar:
+- Cambia el teléfono +56 9 1234 5678.
+- Confirma el correo hola@nida.tech.
+- Actualiza el enlace de WhatsApp con tu número real.
