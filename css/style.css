@@ -3454,3 +3454,212 @@ header .container,
   font-size:15px;
   line-height:1.7;
 }
+/* =====================================================
+   NIDA TECH · PROPUESTA + FUNDADORA
+===================================================== */
+
+
+/* Columna derecha */
+
+.partner-side{
+    width:100%;
+
+    display:flex;
+    flex-direction:column;
+
+    gap:22px;
+}
+
+
+/* =====================================================
+   TARJETA FUNDADORA
+===================================================== */
+
+.founder-card{
+    position:relative;
+
+    width:100%;
+
+    padding:28px 30px;
+
+    background:
+        radial-gradient(
+            circle at 100% 0%,
+            rgba(255,103,25,.12),
+            transparent 38%
+        ),
+        linear-gradient(
+            145deg,
+            #191919 0%,
+            #101010 100%
+        );
+
+    border:1px solid rgba(255,255,255,.12);
+
+    border-radius:12px;
+
+    box-shadow:0 18px 45px rgba(0,0,0,.28);
+
+    overflow:hidden;
+}
+
+
+/* Línea naranja decorativa */
+
+.founder-card::before{
+    content:"";
+
+    position:absolute;
+
+    left:0;
+    top:0;
+    bottom:0;
+
+    width:3px;
+
+    background:var(--orange);
+}
+
+
+/* Parte superior */
+
+.founder-card__header{
+    display:flex;
+
+    align-items:center;
+
+    gap:18px;
+}
+
+
+/* Círculo DV */
+
+.founder-card__avatar{
+    width:58px;
+    height:58px;
+
+    flex-shrink:0;
+
+    display:flex;
+
+    align-items:center;
+    justify-content:center;
+
+    color:#ffffff;
+
+    font-size:1rem;
+
+    font-weight:800;
+
+    letter-spacing:.04em;
+
+    border-radius:50%;
+
+    border:1px solid rgba(255,103,25,.45);
+
+    background:
+        linear-gradient(
+            145deg,
+            rgba(255,103,25,.30),
+            rgba(255,103,25,.06)
+        );
+
+    box-shadow:
+        0 0 22px rgba(255,103,25,.12);
+}
+
+
+/* Datos */
+
+.founder-card__identity{
+    min-width:0;
+}
+
+
+.founder-card__label{
+    display:block;
+
+    margin-bottom:3px;
+
+    color:var(--orange);
+
+    font-size:.67rem;
+
+    font-weight:800;
+
+    letter-spacing:.13em;
+
+    text-transform:uppercase;
+}
+
+
+.founder-card h3{
+    margin:0;
+
+    color:#ffffff;
+
+    font-size:1.55rem;
+
+    font-weight:700;
+
+    line-height:1.15;
+}
+
+
+.founder-card__role{
+    display:block;
+
+    margin-top:5px;
+
+    color:#aaa;
+
+    font-size:.78rem;
+
+    font-weight:500;
+}
+
+
+/* Descripción */
+
+.founder-card__description{
+    margin:20px 0 0;
+
+    padding-top:18px;
+
+    border-top:1px solid rgba(255,255,255,.09);
+
+    color:var(--muted);
+
+    font-size:.86rem;
+
+    line-height:1.7;
+}
+
+
+/* =====================================================
+   RESPONSIVE
+===================================================== */
+
+@media(max-width:700px){
+
+    .partner-side{
+        gap:18px;
+    }
+
+
+    .founder-card{
+        padding:24px;
+    }
+
+
+    .founder-card__avatar{
+        width:52px;
+        height:52px;
+    }
+
+
+    .founder-card h3{
+        font-size:1.35rem;
+    }
+
+}
