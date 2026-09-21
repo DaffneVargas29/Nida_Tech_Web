@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>NIDA · Asistente de Terreno</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <section id="loginScreen" class="login-screen">
+    <div class="login-card">
+      <img src="../assets/logo-sin-fondo.png" alt="NIDA Technology" class="logo">
+      <span class="eyebrow">NIDA TECHNOLOGY</span>
+      <h1>Asistente de Terreno</h1>
+      <p>Registra visitas y conecta la información con Notion y GitHub.</p>
+      <label>Correo</label>
+      <input id="email" type="email" value="demo@agroinventario.cl">
+      <label>Contraseña</label>
+      <input id="password" type="password" value="NIDA2026">
+      <div id="loginError" class="error hidden">Correo o contraseña incorrectos.</div>
+      <button id="loginBtn" class="btn primary full">Ingresar</button>
+      <small>Demo: demo@agroinventario.cl · NIDA2026</small>
+    </div>
+  </section>
+
+  <section id="appScreen" class="app hidden">
+    <aside class="sidebar">
+      <div class="brand">
+        <img src="../assets/logo-sin-fondo.png" alt="NIDA">
+        <div><strong>NIDA</strong><span>Technology</span></div>
+      </div>
+
+      <div class="workspace">
+        <small>ESPACIO DE TRABAJO</small>
+        <strong id="workspaceName">AgroInventario</strong>
+        <span id="workspacePlan">Piloto activo</span>
+      </div>
+
+      <nav>
+        <button class="nav active" data-view="dashboard">⌂ Inicio</button>
+        <button class="nav" data-view="visit">＋ Nueva visita</button>
+        <button class="nav" data-view="history">▤ Historial</button>
+      </nav>
+
+      <div class="user">
+        <div><strong id="userName">Renato</strong><small id="userEmail"></small></div>
+        <button id="logoutBtn">Cerrar sesión</button>
+      </div>
+    </aside>
+
+    <main>
+      <header class="topbar">
+        <div>
+          <span class="eyebrow">NIDA · ASISTENTE DE TERRENO</span>
+          <h1 id="pageTitle">Inicio</h1>
+          <p id="pageSubtitle">Gestiona registros desde un solo lugar.</p>
+        </div>
+        <span class="service">● Servicio activo</span>
+      </header>
+
+      <section id="dashboard" class="view">
+        <div class="hero">
+          <div>
+            <span class="eyebrow">PLATAFORMA NIDA</span>
+            <h2 id="welcomeTitle">AgroInventario, tu espacio NIDA está listo.</h2>
+            <p>Captura información en terreno, revísala y envíala a las herramientas que ya usa tu empresa.</p>
+            <button class="btn primary" id="goVisitBtn">＋ Registrar nueva visita</button>
+          </div>
+          <img src="../assets/logo-sin-fondo.png" alt="NIDA">
+        </div>
+
+        <div class="cards">
+          <article><small>Registros locales</small><strong id="statRecords">0</strong></article>
+          <article><small>Incidencias detectadas</small><strong id="statIssues">0</strong></article>
+          <article><small>Último registro</small><strong id="statLast" class="small">Sin registros</strong></article>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head">
+            <div><span class="eyebrow">ECOSISTEMA</span><h2>Integraciones</h2></div>
+            <button id="refreshStatusBtn" class="btn ghost">Actualizar</button>
+          </div>
+          <div class="integrations">
+            <div class="integration">
+              <span class="badge">N</span>
+              <div><strong>Notion</strong><small id="notionStatusText">Verificando…</small></div>
+              <i id="notionStatusDot" class="dot pending"></i>
+            </div>
+            <div class="integration">
+              <span class="badge gh">GH</span>
+              <div><strong>GitHub</strong><small id="githubStatusText">Verificando…</small></div>
+              <i id="githubStatusDot" class="dot pending"></i>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="visit" class="view hidden">
+        <div class="panel">
+          <div class="panel-head">
+            <div>
+              <span class="eyebrow">NUEVO REGISTRO</span>
+              <h2>Captura de visita</h2>
+              <p>Selecciona empresa y campo, luego escribe o dicta lo ocurrido.</p>
+            </div>
+          </div>
+
+          <div class="two">
+            <div>
+              <label>Cliente / empresa</label>
+              <select id="clientInput"><option value="">Cargando empresas…</option></select>
+            </div>
+            <div>
+              <label>Campo / ubicación</label>
+              <select id="locationInput" disabled><option value="">Selecciona primero una empresa</option></select>
+            </div>
+          </div>
+
+          <label>Reporte de la visita</label>
+          <textarea id="reportInput" rows="9" placeholder="Ej: Hoy visitamos al cliente, revisamos inventario, detectamos un error..."></textarea>
+
+          <div class="actions">
+            <button id="voiceBtn" class="btn ghost">🎙 Dictar</button>
+            <button id="exampleBtn" class="btn ghost">Cargar ejemplo</button>
+            <button id="processBtn" class="btn primary">✦ Procesar visita</button>
+          </div>
+          <small id="voiceStatus"></small>
+        </div>
+
+        <div id="resultCard" class="panel hidden">
+          <div class="panel-head">
+            <div><span class="eyebrow">REVISIÓN</span><h2>Resumen antes de guardar</h2></div>
+          </div>
+
+          <div class="two">
+            <div><label>Cliente</label><input id="resultClient"></div>
+            <div><label>Ubicación</label><input id="resultLocation"></div>
+            <div><label>Tipo de visita</label><input id="resultType"></div>
+            <div><label>Fecha</label><input id="resultVisitDate" type="date"></div>
+          </div>
+
+          <label>Temas revisados</label><textarea id="resultReviewed"></textarea>
+          <label>Solicitudes del cliente</label><textarea id="resultRequests"></textarea>
+          <label>Compromisos AgroInventario</label><textarea id="resultTeamCommitments"></textarea>
+          <label>Compromisos del cliente</label><textarea id="resultClientCommitments"></textarea>
+          <label>Explicaciones / pasos realizados</label><textarea id="resultExplanation"></textarea>
+          <label>Próximos pasos</label><textarea id="resultNextSteps"></textarea>
+          <label>Seguimientos pendientes</label><textarea id="resultFollowup"></textarea>
+          <label>Próxima acción / fecha</label><input id="resultNextDate">
+
+          <div class="issue-box">
+            <div class="panel-head compact">
+              <div><h3>Incidencia técnica</h3><p>Solo se crea Issue después de confirmar.</p></div>
+              <select id="resultGithub"><option value="false">No requiere TI</option><option value="true">Requiere revisión TI</option></select>
+            </div>
+            <div id="githubDraft" class="hidden">
+              <div class="two">
+                <div><label>Módulo / sección</label><input id="githubSection"></div>
+                <div><label>Prioridad</label><select id="githubPriority"><option value="">Por confirmar</option><option>Baja</option><option>Media</option><option>Alta</option><option>Crítica</option></select></div>
+              </div>
+              <label>Problema</label><textarea id="githubProblem"></textarea>
+              <label>Pasos para replicarlo</label><textarea id="githubSteps"></textarea>
+              <label>Antecedentes</label><textarea id="githubContext"></textarea>
+            </div>
+          </div>
+
+          <div class="actions">
+            <button id="cancelBtn" class="btn ghost">Cancelar</button>
+            <button id="confirmBtn" class="btn primary">✓ Confirmar y guardar</button>
+          </div>
+        </div>
+      </section>
+
+      <section id="history" class="view hidden">
+        <div class="panel">
+          <span class="eyebrow">REGISTROS</span>
+          <h2>Historial de visitas</h2>
+          <p>Respaldo local del piloto. El registro remoto se guarda al confirmar cuando las integraciones están configuradas.</p>
+          <div id="historyContainer" class="history"></div>
+        </div>
+      </section>
+    </main>
+  </section>
+
+  <script src="app.js"></script>
+</body>
+</html>
