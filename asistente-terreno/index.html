@@ -70,7 +70,7 @@
         </div>
 
         <div class="cards">
-          <article><small>Registros locales</small><strong id="statRecords">0</strong></article>
+          <article><small>Visitas registradas</small><strong id="statRecords">0</strong></article>
           <article><small>Incidencias detectadas</small><strong id="statIssues">0</strong></article>
           <article><small>Último registro</small><strong id="statLast" class="small">Sin registros</strong></article>
         </div>
@@ -169,13 +169,38 @@
             <button id="confirmBtn" class="btn primary">✓ Confirmar y guardar</button>
           </div>
         </div>
+
+        <div id="saveSuccess" class="panel success-panel hidden">
+          <div class="success-icon">✓</div>
+          <span class="eyebrow">REGISTRO COMPLETADO</span>
+          <h2>Visita registrada correctamente</h2>
+          <p>La información quedó centralizada para que el equipo pueda consultarla después.</p>
+          <div class="save-results">
+            <div><strong>Notion</strong><span id="saveNotionStatus">Verificando…</span><a id="saveNotionLink" class="hidden" target="_blank" rel="noopener">Abrir registro</a></div>
+            <div><strong>GitHub</strong><span id="saveGithubStatus">No requerido</span><a id="saveGithubLink" class="hidden" target="_blank" rel="noopener">Abrir incidencia</a></div>
+          </div>
+          <div class="actions">
+            <button id="newVisitBtn" class="btn ghost">＋ Nueva visita</button>
+            <button id="viewHistoryBtn" class="btn primary">▤ Ver historial completo</button>
+          </div>
+        </div>
       </section>
 
       <section id="history" class="view hidden">
         <div class="panel">
           <span class="eyebrow">REGISTROS</span>
           <h2>Historial de visitas</h2>
-          <p>Respaldo local del piloto. El registro remoto se guarda al confirmar cuando las integraciones están configuradas.</p>
+          <p>Consulta el historial centralizado de visitas. Puedes buscar por empresa, campo, contenido o incidencia y abrir cada registro para ver toda la información.</p>
+          <div class="history-toolbar">
+            <input id="historySearch" type="search" placeholder="Buscar empresa, campo, solicitud, seguimiento...">
+            <select id="historyIssueFilter">
+              <option value="all">Todas las visitas</option>
+              <option value="issues">Solo incidencias</option>
+              <option value="noissues">Sin incidencia</option>
+            </select>
+            <button id="historyRefreshBtn" class="btn ghost">Actualizar</button>
+          </div>
+          <div id="historyMeta" class="history-meta">Cargando historial…</div>
           <div id="historyContainer" class="history"></div>
         </div>
       </section>
