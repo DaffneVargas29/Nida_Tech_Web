@@ -63,10 +63,28 @@ Texto / dictado
 Resumen editable
     ↓
 Confirmar
-    ├─ Notion
-    ├─ GitHub Issue si hay incidencia
+    ├─ Notion: visita completa
+    ├─ GitHub: Issue si hay incidencia
+    ├─ enlace y número del Issue guardados nuevamente en Notion
     └─ copia local de respaldo
 ```
+
+## Experiencia del piloto
+
+La versión actual incluye:
+
+- historial centralizado leído desde Notion;
+- búsqueda por empresa, campo y contenido;
+- filtros por empresa e incidencias;
+- vista expandible con el detalle completo de cada visita;
+- accesos directos al registro de Notion y a la incidencia de GitHub;
+- panel de seguimientos pendientes;
+- métricas de visitas, incidencias y seguimientos;
+- confirmación visual después de guardar;
+- exportación CSV del historial filtrado;
+- diseño responsive para escritorio y móvil.
+
+La base de visitas puede incluir las propiedades `GitHub Issue` (URL) y `GitHub #` (número). Cuando se crea una incidencia nueva, el backend las completa automáticamente para mantener trazabilidad entre Notion y GitHub.
 
 ## Endpoints
 
@@ -75,7 +93,8 @@ Confirmar
 - `GET /api/notion/companies`
 - `GET /api/notion/fields?companyId=...`
 - `GET /api/notion/schema?dataSourceId=...`
-- `POST /api/visits`
+- `GET /api/visits` — historial centralizado desde Notion
+- `POST /api/visits` — guarda visita y crea Issue cuando corresponde
 
 ## Antes de producción
 
