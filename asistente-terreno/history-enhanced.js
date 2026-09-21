@@ -7,7 +7,7 @@ document.addEventListener("DOMContentLoaded",()=>{
   function norm(v=""){return String(v).normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase()}
   async function api(url){const r=await fetch(url,{headers:{"Content-Type":"application/json"}});const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.error||("HTTP "+r.status));return d}
   function localRecords(){try{const x=JSON.parse(localStorage.getItem(STORAGE)||"[]");return Array.isArray(x)?x:[]}catch{return[]}}
-  function formatWhen(v=""){if(!v)return"Sin fecha";const d=new Date(v);return Number.isNaN(d.getTime())?v:d.toLocaleString("es-CL",{dateStyle:"medium",timeStyle:v.includes("T")?"short":undefined})}
+  function formatWhen(v=""){if(!v)return"Sin fecha";if(/^\d{4}-\d{2}-\d{2}$/.test(v)){const [y,m,d]=v.split("-");return d+"-"+m+"-"+y}const dt=new Date(v);return Number.isNaN(dt.getTime())?v:dt.toLocaleString("es-CL",{dateStyle:"medium",timeStyle:"short"})}
   function merge(remote=[]){
     const local=localRecords(),byPage=new Map();
     local.forEach(x=>{const id=x.remote?.notion?.pageId;if(id)byPage.set(id,x)});
