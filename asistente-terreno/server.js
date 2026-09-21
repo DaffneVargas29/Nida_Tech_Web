@@ -292,6 +292,81 @@ async function listFields(companyId) {
   return { mode: 'live', items };
 }
 
+function notionPropertyText(prop) {
+  if (!prop) return '';
+  if (prop.type === 'title') return (prop.title || []).map(x => x?.plain_text || x?.text?.content || '').join('').trim();
+  if (prop.type === 'rich_text') return (prop.rich_text || []).map(x => x?.plain_text || x?.text?.content || '').join('').trim();
+  if (prop.type === 'select') return prop.select?.name || '';
+  if (prop.type === 'status') return prop.status?.name || '';
+  if (prop.type === 'date') return prop.date?.start || '';
+  if (prop.type === 'checkbox') return Boolean(prop.checkbox);
+  return '';
+}
+
+function notionRelationIds(prop) {
+  return prop?.type === 'relation' ? (prop.relation || []).map(x => x.id).filter(Boolean) : [];
+}
+
+async function listNotionVisits() {
+  if (!notionWriteConfigured()) return { mode: 'demo', items: [] };
+
+  const dataSourceId = process.env.NOTION_VISITS_DATA_SOURCE_ID;
+  const [schema, pages, companiesResult, fieldsResult] = await Promise.all([
+    retrieveDataSource(dataSourceId),
+    queryAllDataSource(dataSourceId),
+    notionReadConfigured() ? queryAllDataSource(process.env.NOTION_COMPANIES_DATA_SOURCE_ID) : Promise.resolve([]),
+    notionReadConfigured() ? queryAllDataSource(process.env.NOTION_FIELDS_DATA_SOURCE_ID) : Promise.resolve([])
+  ]);
+
+  const companyNames = new Map(companiesResult.map(page => [page.id, pageTitle(page)]));
+  const fieldNames = new Map(fieldsResult.map(page => [page.id, pageTitle(page)]));
+
+  const companyProp = findSchemaProperty(schema, process.env.NOTION_VISIT_COMPANY_RELATION_PROPERTY, ['Empresa', 'Empresas', 'Cliente', 'Cuenta'], ['relation']);
+  const fieldProp = findSchemaProperty(schema, process.env.NOTION_VISIT_FIELD_RELATION_PROPERTY, ['Campo', 'Campos', 'Ubicación', 'Ubicacion', 'Proyecto'], ['relation']);
+  const dateProp = findSchemaProperty(schema, process.env.NOTION_VISIT_DATE_PROPERTY, ['Fecha visita', 'Fecha de visita', 'Fecha'], ['date']);
+  const typeProp = findSchemaProperty(schema, process.env.NOTION_VISIT_TYPE_PROPERTY, ['Tipo de visita', 'Tipo'], ['select', 'status']);
+  const reviewedProp = findSchemaProperty(schema, process.env.NOTION_VISIT_REVIEWED_PROPERTY, ['Temas revisados', 'Revisado', 'Actividades'], ['rich_text']);
+  const requestsProp = findSchemaProperty(schema, process.env.NOTION_VISIT_REQUESTS_PROPERTY, ['Solicitudes', 'Solicitudes del cliente', 'Requerimientos'], ['rich_text']);
+  const teamProp = findSchemaProperty(schema, process.env.NOTION_VISIT_TEAM_COMMITMENTS_PROPERTY, ['Compromisos equipo', 'Compromisos NIDA', 'Compromisos AgroInventario'], ['rich_text']);
+  const clientProp = findSchemaProperty(schema, process.env.NOTION_VISIT_CLIENT_COMMITMENTS_PROPERTY, ['Compromisos cliente', 'Compromisos del cliente'], ['rich_text']);
+  const explanationProp = findSchemaProperty(schema, process.env.NOTION_VISIT_EXPLANATION_PROPERTY, ['Explicaciones', 'Pasos realizados', 'Detalle'], ['rich_text']);
+  const nextStepsProp = findSchemaProperty(schema, process.env.NOTION_VISIT_NEXT_STEPS_PROPERTY, ['Próximos pasos', 'Proximos pasos', 'Próxima acción', 'Proxima accion'], ['rich_text']);
+  const followupProp = findSchemaProperty(schema, process.env.NOTION_VISIT_FOLLOWUP_PROPERTY, ['Seguimiento', 'Seguimientos pendientes', 'Pendientes'], ['rich_text']);
+  const nextDateProp = findSchemaProperty(schema, process.env.NOTION_VISIT_NEXT_DATE_PROPERTY, ['Próxima fecha', 'Proxima fecha', 'Próxima acción fecha', 'Fecha próxima'], ['rich_text']);
+  const reportProp = findSchemaProperty(schema, process.env.NOTION_VISIT_REPORT_PROPERTY, ['Reporte original', 'Bitácora', 'Bitacora', 'Notas'], ['rich_text']);
+  const githubProp = findSchemaProperty(schema, process.env.NOTION_VISIT_GITHUB_FLAG_PROPERTY, ['Incidencia', 'GitHub', 'Requiere GitHub'], ['checkbox']);
+
+  const items = pages.map(page => {
+    const props = page.properties || {};
+    const companyIds = companyProp ? notionRelationIds(props[companyProp.name]) : [];
+    const fieldIds = fieldProp ? notionRelationIds(props[fieldProp.name]) : [];
+    return {
+      id: page.id,
+      source: 'notion',
+      notionUrl: page.url || '',
+      client: companyNames.get(companyIds[0]) || 'Empresa sin nombre',
+      location: fieldNames.get(fieldIds[0]) || 'Campo sin nombre',
+      companyId: companyIds[0] || '',
+      fieldId: fieldIds[0] || '',
+      type: typeProp ? notionPropertyText(props[typeProp.name]) : '',
+      visitDate: dateProp ? notionPropertyText(props[dateProp.name]) : '',
+      reviewed: reviewedProp ? notionPropertyText(props[reviewedProp.name]) : '',
+      requests: requestsProp ? notionPropertyText(props[requestsProp.name]) : '',
+      teamCommitments: teamProp ? notionPropertyText(props[teamProp.name]) : '',
+      clientCommitments: clientProp ? notionPropertyText(props[clientProp.name]) : '',
+      explanation: explanationProp ? notionPropertyText(props[explanationProp.name]) : '',
+      nextSteps: nextStepsProp ? notionPropertyText(props[nextStepsProp.name]) : '',
+      followup: followupProp ? notionPropertyText(props[followupProp.name]) : '',
+      nextDate: nextDateProp ? notionPropertyText(props[nextDateProp.name]) : '',
+      reportOriginal: reportProp ? notionPropertyText(props[reportProp.name]) : '',
+      github: githubProp ? Boolean(props[githubProp.name]?.checkbox) : false,
+      createdAt: page.created_time || ''
+    };
+  }).sort((a, b) => String(b.visitDate || b.createdAt).localeCompare(String(a.visitDate || a.createdAt)));
+
+  return { mode: 'live', items };
+}
+
 async function createNotionVisit(record) {
   if (!notionWriteConfigured()) return null;
 
@@ -481,6 +556,11 @@ async function handleApi(req, res, url) {
   if (req.method === 'GET' && url.pathname === '/api/notion/fields') {
     const companyId = url.searchParams.get('companyId') || '';
     const result = await listFields(companyId);
+    return json(res, 200, result);
+  }
+
+  if (req.method === 'GET' && url.pathname === '/api/visits') {
+    const result = await listNotionVisits();
     return json(res, 200, result);
   }
 
