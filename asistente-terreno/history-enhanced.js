@@ -29,8 +29,8 @@ document.addEventListener("DOMContentLoaded",()=>{
     meta.textContent=rows.length+" de "+historyData.length+" visitas";
     if(!rows.length){c.innerHTML='<div class="empty">No encontramos visitas con esos filtros.</div>';return}
     c.innerHTML=rows.map(r=>{
-      const notionUrl=r.notionUrl||r.remote?.notion?.url||"",githubUrl=r.remote?.github?.url||"";
-      return '<details class="history-item"><summary><div><strong>'+esc(r.client)+' · '+esc(r.location)+'</strong><p>'+esc(r.type||"Visita")+' · '+esc(formatWhen(r.visitDate||r.createdAt))+'</p></div><div class="history-tags">'+(r.github?'<span class="tag issue">⚠ Incidencia</span>':'<span class="tag ok">Sin incidencia</span>')+'<span class="chevron">⌄</span></div></summary><div class="history-detail">'+
+      const notionUrl=r.notionUrl||r.remote?.notion?.url||"",githubUrl=r.githubUrl||r.remote?.github?.url||"";
+      return '<details class="history-item"><summary><div><strong>'+esc(r.client)+' · '+esc(r.location)+'</strong><p>'+esc(r.type||"Visita")+' · '+esc(formatWhen(r.visitDate||r.createdAt))+'</p></div><div class="history-tags">'+(r.github?'<span class="tag issue">⚠ Incidencia'+(r.githubNumber?' #'+esc(r.githubNumber):'')+'</span>':'<span class="tag ok">Sin incidencia</span>')+'<span class="chevron">⌄</span></div></summary><div class="history-detail">'+
         detail("Temas revisados",r.reviewed)+
         detail("Solicitudes del cliente",r.requests)+
         detail("Compromisos AgroInventario",r.teamCommitments)+
