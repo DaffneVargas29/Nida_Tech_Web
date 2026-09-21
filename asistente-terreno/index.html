@@ -72,7 +72,18 @@
         <div class="cards">
           <article><small>Visitas registradas</small><strong id="statRecords">0</strong></article>
           <article><small>Incidencias detectadas</small><strong id="statIssues">0</strong></article>
+          <article><small>Seguimientos pendientes</small><strong id="statFollowups">0</strong></article>
           <article><small>Último registro</small><strong id="statLast" class="small">Sin registros</strong></article>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head">
+            <div><span class="eyebrow">PRÓXIMAS ACCIONES</span><h2>Seguimientos pendientes</h2></div>
+            <button id="goHistoryBtn" class="btn ghost">Ver historial</button>
+          </div>
+          <div id="dashboardFollowups" class="followup-list">
+            <div class="empty compact-empty">Cargando seguimientos…</div>
+          </div>
         </div>
 
         <div class="panel">
@@ -193,11 +204,15 @@
           <p>Consulta el historial centralizado de visitas. Puedes buscar por empresa, campo, contenido o incidencia y abrir cada registro para ver toda la información.</p>
           <div class="history-toolbar">
             <input id="historySearch" type="search" placeholder="Buscar empresa, campo, solicitud, seguimiento...">
+            <select id="historyCompanyFilter">
+              <option value="all">Todas las empresas</option>
+            </select>
             <select id="historyIssueFilter">
               <option value="all">Todas las visitas</option>
               <option value="issues">Solo incidencias</option>
               <option value="noissues">Sin incidencia</option>
             </select>
+            <button id="historyExportBtn" class="btn ghost">Exportar CSV</button>
             <button id="historyRefreshBtn" class="btn ghost">Actualizar</button>
           </div>
           <div id="historyMeta" class="history-meta">Cargando historial…</div>
