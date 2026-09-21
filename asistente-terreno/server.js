@@ -300,6 +300,8 @@ function notionPropertyText(prop) {
   if (prop.type === 'status') return prop.status?.name || '';
   if (prop.type === 'date') return prop.date?.start || '';
   if (prop.type === 'checkbox') return Boolean(prop.checkbox);
+  if (prop.type === 'url') return prop.url || '';
+  if (prop.type === 'number') return prop.number ?? '';
   return '';
 }
 
@@ -335,6 +337,8 @@ async function listNotionVisits() {
   const nextDateProp = findSchemaProperty(schema, process.env.NOTION_VISIT_NEXT_DATE_PROPERTY, ['Próxima fecha', 'Proxima fecha', 'Próxima acción fecha', 'Fecha próxima'], ['rich_text']);
   const reportProp = findSchemaProperty(schema, process.env.NOTION_VISIT_REPORT_PROPERTY, ['Reporte original', 'Bitácora', 'Bitacora', 'Notas'], ['rich_text']);
   const githubProp = findSchemaProperty(schema, process.env.NOTION_VISIT_GITHUB_FLAG_PROPERTY, ['Incidencia', 'GitHub', 'Requiere GitHub'], ['checkbox']);
+  const githubUrlProp = findSchemaProperty(schema, process.env.NOTION_VISIT_GITHUB_URL_PROPERTY, ['GitHub Issue', 'Issue GitHub', 'GitHub URL'], ['url']);
+  const githubNumberProp = findSchemaProperty(schema, process.env.NOTION_VISIT_GITHUB_NUMBER_PROPERTY, ['GitHub #', 'GitHub Issue #', 'Issue #'], ['number']);
 
   const items = pages.map(page => {
     const props = page.properties || {};
@@ -360,6 +364,8 @@ async function listNotionVisits() {
       nextDate: nextDateProp ? notionPropertyText(props[nextDateProp.name]) : '',
       reportOriginal: reportProp ? notionPropertyText(props[reportProp.name]) : '',
       github: githubProp ? Boolean(props[githubProp.name]?.checkbox) : false,
+      githubUrl: githubUrlProp ? notionPropertyText(props[githubUrlProp.name]) : '',
+      githubNumber: githubNumberProp ? notionPropertyText(props[githubNumberProp.name]) : '',
       createdAt: page.created_time || ''
     };
   }).sort((a, b) => String(b.visitDate || b.createdAt).localeCompare(String(a.visitDate || a.createdAt)));
@@ -426,6 +432,21 @@ async function createNotionVisit(record) {
   return notionRequest('/pages', {
     method: 'POST',
     body: JSON.stringify(payload)
+  });
+}
+
+async function attachGithubIssueToNotion(pageId, issue) {
+  if (!pageId || !issue) return;
+  const schema = await retrieveDataSource(process.env.NOTION_VISITS_DATA_SOURCE_ID);
+  const properties = {};
+  const urlProp = findSchemaProperty(schema, process.env.NOTION_VISIT_GITHUB_URL_PROPERTY, ['GitHub Issue', 'Issue GitHub', 'GitHub URL'], ['url']);
+  const numberProp = findSchemaProperty(schema, process.env.NOTION_VISIT_GITHUB_NUMBER_PROPERTY, ['GitHub #', 'GitHub Issue #', 'Issue #'], ['number']);
+  if (urlProp && issue.html_url) properties[urlProp.name] = { url: issue.html_url };
+  if (numberProp && issue.number != null) properties[numberProp.name] = { number: issue.number };
+  if (!Object.keys(properties).length) return;
+  return notionRequest('/pages/' + encodeURIComponent(pageId), {
+    method: 'PATCH',
+    body: JSON.stringify({ properties })
   });
 }
 
@@ -576,24 +597,30 @@ async function handleApi(req, res, url) {
       github: { created: false, mode: githubConfigured() ? 'live' : 'demo' }
     };
 
+    let notionPage = null;
+    let githubIssue = null;
+
     if (notionWriteConfigured()) {
-      const page = await createNotionVisit(record);
+      notionPage = await createNotionVisit(record);
       result.notion = {
         saved: true,
         mode: 'live',
-        pageId: page?.id || null,
-        url: page?.url || null
+        pageId: notionPage?.id || null,
+        url: notionPage?.url || null
       };
     }
 
     if (record.github && githubConfigured()) {
-      const issue = await createGithubIssue(record);
+      githubIssue = await createGithubIssue(record);
       result.github = {
         created: true,
         mode: 'live',
-        number: issue?.number || null,
-        url: issue?.html_url || null
+        number: githubIssue?.number || null,
+        url: githubIssue?.html_url || null
       };
+      if (notionPage?.id && githubIssue) {
+        await attachGithubIssueToNotion(notionPage.id, githubIssue);
+      }
     }
 
     return json(res, 200, result);
