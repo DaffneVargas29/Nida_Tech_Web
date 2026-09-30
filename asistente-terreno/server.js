@@ -3,6 +3,7 @@
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 const { URL } = require('url');
 
 const ROOT = __dirname;
@@ -11,6 +12,9 @@ loadEnv(path.join(ROOT, '.env'));
 const PORT = Number(process.env.PORT || 3000);
 const NOTION_VERSION = process.env.NOTION_VERSION || '2026-03-11';
 const GITHUB_API_VERSION = process.env.GITHUB_API_VERSION || '2026-03-10';
+const AUTH_SECRET = process.env.AUTH_SECRET || '';
+const AUTH_SESSION_HOURS = Math.max(1, Number(process.env.AUTH_SESSION_HOURS || 12));
+const AUTH_USERS = readConfiguredUsers();
 
 const MIME = {
   '.html': 'text/html; charset=utf-8',
@@ -63,6 +67,84 @@ function loadEnv(filePath) {
     }
     if (!(key in process.env)) process.env[key] = value;
   }
+}
+
+
+function readConfiguredUsers() {
+  const users = [];
+  for (let i = 1; i <= 20; i += 1) {
+    const email = String(process.env['APP_USER_' + i + '_EMAIL'] || '').trim().toLowerCase();
+    const password = String(process.env['APP_USER_' + i + '_PASSWORD'] || '');
+    if (!email && !password) continue;
+    if (!email || !password) {
+      console.warn('[NIDA] Usuario ' + i + ' incompleto: se requieren EMAIL y PASSWORD.');
+      continue;
+    }
+    users.push({
+      email,
+      password,
+      name: String(process.env['APP_USER_' + i + '_NAME'] || email.split('@')[0]).trim(),
+      workspace: String(process.env['APP_USER_' + i + '_WORKSPACE'] || 'AgroInventario').trim(),
+      plan: String(process.env['APP_USER_' + i + '_PLAN'] || 'Piloto activo').trim(),
+      role: String(process.env['APP_USER_' + i + '_ROLE'] || 'cliente').trim()
+    });
+  }
+  return users;
+}
+
+function publicUser(user) {
+  return {
+    email: user.email,
+    name: user.name,
+    workspace: user.workspace,
+    plan: user.plan,
+    role: user.role
+  };
+}
+
+function passwordMatches(received, expected) {
+  const a = crypto.createHash('sha256').update(String(received || '')).digest();
+  const b = crypto.createHash('sha256').update(String(expected || '')).digest();
+  return crypto.timingSafeEqual(a, b);
+}
+
+function authReady() {
+  return Boolean(AUTH_SECRET && AUTH_USERS.length);
+}
+
+function signSession(user) {
+  const payload = {
+    ...publicUser(user),
+    exp: Date.now() + AUTH_SESSION_HOURS * 60 * 60 * 1000
+  };
+  const encoded = Buffer.from(JSON.stringify(payload), 'utf8').toString('base64url');
+  const signature = crypto.createHmac('sha256', AUTH_SECRET).update(encoded).digest('base64url');
+  return encoded + '.' + signature;
+}
+
+function verifySession(token) {
+  if (!AUTH_SECRET || !token || !token.includes('.')) return null;
+  const [encoded, signature] = token.split('.');
+  if (!encoded || !signature) return null;
+
+  const expected = crypto.createHmac('sha256', AUTH_SECRET).update(encoded).digest('base64url');
+  const a = Buffer.from(signature);
+  const b = Buffer.from(expected);
+  if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) return null;
+
+  try {
+    const payload = JSON.parse(Buffer.from(encoded, 'base64url').toString('utf8'));
+    if (!payload?.email || !payload?.exp || Date.now() >= Number(payload.exp)) return null;
+    return payload;
+  } catch {
+    return null;
+  }
+}
+
+function sessionUserFromRequest(req) {
+  const authorization = String(req.headers.authorization || '');
+  if (!authorization.toLowerCase().startsWith('bearer ')) return null;
+  return verifySession(authorization.slice(7).trim());
 }
 
 function normalize(value = '') {
@@ -564,6 +646,41 @@ async function handleApi(req, res, url) {
     return json(res, 200, { ok: true, service: 'NIDA Asistente de Terreno', version: '1.0.0' });
   }
 
+  if (req.method === 'POST' && url.pathname === '/api/auth/login') {
+    if (!authReady()) {
+      return json(res, 503, { ok: false, error: 'Acceso aún no configurado en el servidor.' });
+    }
+
+    const body = await readJsonBody(req);
+    const email = String(body.email || '').trim().toLowerCase();
+    const password = String(body.password || '');
+    const matched = AUTH_USERS.find(candidate =>
+      candidate.email === email && passwordMatches(password, candidate.password)
+    );
+
+    if (!matched) {
+      return json(res, 401, { ok: false, error: 'Correo o contraseña incorrectos.' });
+    }
+
+    return json(res, 200, {
+      ok: true,
+      token: signSession(matched),
+      user: publicUser(matched),
+      expiresInHours: AUTH_SESSION_HOURS
+    });
+  }
+
+  if (req.method === 'GET' && url.pathname === '/api/auth/me') {
+    const session = sessionUserFromRequest(req);
+    if (!session) return json(res, 401, { ok: false, error: 'Sesión inválida o vencida.' });
+    return json(res, 200, { ok: true, user: publicUser(session) });
+  }
+
+  const authenticatedUser = sessionUserFromRequest(req);
+  if (!authenticatedUser) {
+    return json(res, 401, { ok: false, error: 'Debes iniciar sesión.' });
+  }
+
   if (req.method === 'GET' && url.pathname === '/api/integrations/status') {
     const status = await integrationStatus();
     return json(res, 200, status);
@@ -587,6 +704,8 @@ async function handleApi(req, res, url) {
 
   if (req.method === 'POST' && url.pathname === '/api/visits') {
     const record = await readJsonBody(req);
+    record.workspace = authenticatedUser.workspace;
+    record.registeredBy = authenticatedUser.email;
     if (!record.client || !record.location || !record.reportOriginal) {
       return json(res, 400, { ok: false, error: 'Faltan cliente, ubicación o reporte original.' });
     }
@@ -684,4 +803,5 @@ server.listen(PORT, () => {
   console.log('NIDA Asistente de Terreno listo en http://localhost:' + PORT);
   console.log('Notion: ' + (notionReadConfigured() ? 'configurado' : 'modo demo'));
   console.log('GitHub: ' + (githubConfigured() ? 'configurado' : 'modo demo'));
+  console.log('Acceso: ' + (authReady() ? AUTH_USERS.length + ' usuario(s) configurado(s)' : 'sin configurar'));
 });
