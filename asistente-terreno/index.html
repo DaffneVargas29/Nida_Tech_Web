@@ -14,12 +14,12 @@
       <h1>Asistente de Terreno</h1>
       <p>Registra visitas y conecta la información con Notion y GitHub.</p>
       <label>Correo</label>
-      <input id="email" type="email" value="demo@agroinventario.cl">
+      <input id="email" type="email" autocomplete="username" placeholder="correo@empresa.cl">
       <label>Contraseña</label>
-      <input id="password" type="password" value="NIDA2026">
+      <input id="password" type="password" autocomplete="current-password" placeholder="Contraseña">
       <div id="loginError" class="error hidden">Correo o contraseña incorrectos.</div>
       <button id="loginBtn" class="btn primary full">Ingresar</button>
-      <small>Demo: demo@agroinventario.cl · NIDA2026</small>
+      <small>Acceso privado para usuarios autorizados.</small>
     </div>
   </section>
 
@@ -223,6 +223,5 @@
   </section>
 
   <script src="app.js"></script>
-  <script src="history-enhanced.js"></script>
 </body>
 </html>
