@@ -17,14 +17,23 @@ Abre:
 http://localhost:3000
 ```
 
-Credenciales demo:
+El acceso se configura en `.env`. El correo y la contraseña ya no están escritos en el frontend ni visibles desde el navegador.
+
+Ejemplo:
 
 ```text
-demo@agroinventario.cl
-NIDA2026
+AUTH_SECRET=una_clave_larga_y_aleatoria
+AUTH_SESSION_HOURS=12
+
+APP_USER_1_EMAIL=correo@empresa.cl
+APP_USER_1_PASSWORD=una_contrasena_segura
+APP_USER_1_NAME=Renato
+APP_USER_1_WORKSPACE=AgroInventario
+APP_USER_1_PLAN=Piloto activo
+APP_USER_1_ROLE=cliente
 ```
 
-Sin un archivo `.env`, la app funciona en **modo demo** con empresas y campos ficticios. Esto permite revisar el flujo completo sin tocar datos reales.
+Puedes agregar más usuarios usando `APP_USER_2_...`, `APP_USER_3_...`, etc. La API queda protegida por una sesión firmada en el servidor.
 
 ## Conectar Notion real
 
@@ -96,6 +105,12 @@ La base de visitas puede incluir las propiedades `GitHub Issue` (URL) y `GitHub 
 - `GET /api/visits` — historial centralizado desde Notion
 - `POST /api/visits` — guarda visita y crea Issue cuando corresponde
 
-## Antes de producción
+## Seguridad del piloto
 
-El login actual es de piloto/demo. Antes de entregar a clientes debe reemplazarse por autenticación real y desplegarse el backend en un servidor con HTTPS.
+- El login se valida en el servidor.
+- Las contraseñas y tokens quedan en variables de entorno; no se envían al navegador.
+- La API de Notion/GitHub requiere una sesión válida.
+- Las sesiones están firmadas con `AUTH_SECRET` y vencen según `AUTH_SESSION_HOURS`.
+- `.env` debe permanecer fuera de GitHub.
+
+Para producción comercial a mayor escala conviene migrar posteriormente a una base de usuarios con contraseñas hasheadas y recuperación de acceso, pero esta versión ya evita el login expuesto que tenía la demo inicial.
