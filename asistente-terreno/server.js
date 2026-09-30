@@ -418,6 +418,7 @@ async function listNotionVisits() {
   const followupProp = findSchemaProperty(schema, process.env.NOTION_VISIT_FOLLOWUP_PROPERTY, ['Seguimiento', 'Seguimientos pendientes', 'Pendientes'], ['rich_text']);
   const nextDateProp = findSchemaProperty(schema, process.env.NOTION_VISIT_NEXT_DATE_PROPERTY, ['Próxima fecha', 'Proxima fecha', 'Próxima acción fecha', 'Fecha próxima'], ['rich_text']);
   const reportProp = findSchemaProperty(schema, process.env.NOTION_VISIT_REPORT_PROPERTY, ['Reporte original', 'Bitácora', 'Bitacora', 'Notas'], ['rich_text']);
+  const registeredByProp = findSchemaProperty(schema, process.env.NOTION_VISIT_REGISTERED_BY_PROPERTY, ['Registrado por', 'Creado por', 'Responsable'], ['rich_text']);
   const githubProp = findSchemaProperty(schema, process.env.NOTION_VISIT_GITHUB_FLAG_PROPERTY, ['Incidencia', 'GitHub', 'Requiere GitHub'], ['checkbox']);
   const githubUrlProp = findSchemaProperty(schema, process.env.NOTION_VISIT_GITHUB_URL_PROPERTY, ['GitHub Issue', 'Issue GitHub', 'GitHub URL'], ['url']);
   const githubNumberProp = findSchemaProperty(schema, process.env.NOTION_VISIT_GITHUB_NUMBER_PROPERTY, ['GitHub #', 'GitHub Issue #', 'Issue #'], ['number']);
@@ -445,6 +446,7 @@ async function listNotionVisits() {
       followup: followupProp ? notionPropertyText(props[followupProp.name]) : '',
       nextDate: nextDateProp ? notionPropertyText(props[nextDateProp.name]) : '',
       reportOriginal: reportProp ? notionPropertyText(props[reportProp.name]) : '',
+      registeredBy: registeredByProp ? notionPropertyText(props[registeredByProp.name]) : '',
       github: githubProp ? Boolean(props[githubProp.name]?.checkbox) : false,
       githubUrl: githubUrlProp ? notionPropertyText(props[githubUrlProp.name]) : '',
       githubNumber: githubNumberProp ? notionPropertyText(props[githubNumberProp.name]) : '',
@@ -491,7 +493,8 @@ async function createNotionVisit(record) {
     ['NOTION_VISIT_EXPLANATION_PROPERTY', ['Explicaciones', 'Pasos realizados', 'Detalle'], record.explanation],
     ['NOTION_VISIT_NEXT_STEPS_PROPERTY', ['Próximos pasos', 'Proximos pasos', 'Próxima acción', 'Proxima accion'], record.nextSteps],
     ['NOTION_VISIT_FOLLOWUP_PROPERTY', ['Seguimiento', 'Seguimientos pendientes', 'Pendientes'], record.followup],
-    ['NOTION_VISIT_REPORT_PROPERTY', ['Reporte original', 'Bitácora', 'Bitacora', 'Notas'], record.reportOriginal]
+    ['NOTION_VISIT_REPORT_PROPERTY', ['Reporte original', 'Bitácora', 'Bitacora', 'Notas'], record.reportOriginal],
+    ['NOTION_VISIT_REGISTERED_BY_PROPERTY', ['Registrado por', 'Creado por', 'Responsable'], record.registeredBy]
   ];
 
   for (const [envKey, candidates, value] of richMappings) {
